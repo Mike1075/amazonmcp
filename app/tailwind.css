@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 自定义工具类 */
+@layer utilities {
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .aspect-w-16 {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  }
+  
+  .aspect-h-9 {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+}
+
+/* 组件样式 */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors;
+  }
+  
+  .card {
+    @apply bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+  }
+}
+
+/* 价格比较专用样式 */
+.price-best {
+  @apply text-green-600 font-bold;
+}
+
+.price-normal {
+  @apply text-gray-600;
+}
+
+.platform-badge {
+  @apply px-3 py-1 text-sm rounded-full border;
+}
+
+.platform-badge.selected {
+  @apply bg-blue-100 border-blue-300 text-blue-700;
+}
+
+.platform-badge.unselected {
+  @apply bg-white border-gray-300 text-gray-700 hover:bg-gray-50;
+}
+
+html,
+body {
+  @apply bg-white dark:bg-gray-950;
+
+  @media (prefers-color-scheme: dark) {
+    color-scheme: dark;
+  }
+}

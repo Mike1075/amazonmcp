@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "Bright Data": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@brightdata/mcp-server-bright-data",
+        "--key",
+        "9bae4bf1-075b-4a2e-96fa-3d73b854bed6",
+        "--profile",
+        "shallow-gamefowl-yeqNYX"
+      ],
+      "env": {}
+    }
+  }
+} 

@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "Bright Data": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smithery/cli@latest",
+        "run",
+        "@brightdata/mcp-server-bright-data",
+        "--key",
+        "9bae4bf1-075b-4a2e-96fa-3d73b854bed6",
+        "--profile",
+        "shallow-gamefowl-yeqNYX"
+      ],
+      "env": {}
+    },
+    "Supabase Direct": {
+      "type": "stdio", 
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server@latest"
+      ],
+      "env": {
+        "SUPABASE_URL": "https://eyqpyvepmgzzkjqqkypb.supabase.co",
+        "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV5cXB5dmVwbWd6emtqcXFreXBiIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MjQ2MTkzNiwiZXhwIjoyMDY4MDM3OTM2fQ.WBhw6UjSrr0_1MmwR59S8UdxV7EtAJqGbXQ-lGHhC08"
+      }
+    }
+  }
+} 

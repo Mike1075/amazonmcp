@@ -1,0 +1,207 @@
+import type { MetaFunction, LoaderFunctionArgs } from "@remix-run/node";
+import { json } from "@remix-run/node";
+import { Form, useLoaderData, useNavigation } from "@remix-run/react";
+import { useState } from "react";
+import { supabase, type Product, type PriceRecord } from "~/lib/supabase";
+
+export const meta: MetaFunction = () => {
+  return [
+    { title: "智能比价神器 - 多平台商品价格对比" },
+    { name: "description", content: "一键搜索，多平台比价，帮您找到最优惠的价格" },
+  ];
+};
+
+export async function loader({ request }: LoaderFunctionArgs) {
+  const url = new URL(request.url);
+  const query = url.searchParams.get("q");
+
+  let products: (Product & { price_records: PriceRecord[] })[] = [];
+
+  if (query) {
+    // 搜索产品和价格记录
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        price_records (*)
+      `)
+      .ilike('name', `%${query}%`)
+      .order('created_at', { ascending: false });
+
+    if (!error && data) {
+      products = data;
+    }
+  } else {
+    // 获取最新产品
+    const { data, error } = await supabase
+      .from('products')
+      .select(`
+        *,
+        price_records (*)
+      `)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (!error && data) {
+      products = data;
+    }
+  }
+
+  return json({ products, query });
+}
+
+export default function Index() {
+  const { products, query } = useLoaderData<typeof loader>();
+  const navigation = useNavigation();
+  const isSearching = navigation.state === "submitting";
+
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([]);
+
+  const platforms = ['amazon', 'walmart', 'ebay', 'target'];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="container mx-auto px-4 py-8">
+        {/* 页头 */}
+        <header className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            🛒 智能比价神器
+          </h1>
+          <p className="text-xl text-gray-600">
+            一键搜索，多平台比价，帮您找到最优惠的价格
+          </p>
+        </header>
+
+        {/* 搜索区域 */}
+        <div className="max-w-4xl mx-auto mb-12">
+          <Form method="get" className="flex gap-4 mb-6">
+            <div className="flex-1 relative">
+              <input
+                name="q"
+                type="text"
+                placeholder="搜索产品..."
+                defaultValue={query || ""}
+                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isSearching}
+              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSearching ? "搜索中..." : "搜索"}
+            </button>
+          </Form>
+
+          {/* 平台筛选 */}
+          <div className="flex flex-wrap gap-2">
+            <span className="text-sm text-gray-600 mr-2">平台筛选:</span>
+            {platforms.map((platform) => (
+              <button
+                key={platform}
+                type="button"
+                onClick={() => {
+                  setSelectedPlatforms(prev =>
+                    prev.includes(platform)
+                      ? prev.filter(p => p !== platform)
+                      : [...prev, platform]
+                  );
+                }}
+                className={`px-3 py-1 text-sm rounded-full border ${
+                  selectedPlatforms.includes(platform)
+                    ? 'bg-blue-100 border-blue-300 text-blue-700'
+                    : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                {platform.charAt(0).toUpperCase() + platform.slice(1)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 搜索结果 */}
+        <div className="max-w-6xl mx-auto">
+          {query && (
+            <h2 className="text-2xl font-semibold mb-6">
+              搜索结果: "{query}" ({products.length} 个产品)
+            </h2>
+          )}
+
+          {!query && (
+            <h2 className="text-2xl font-semibold mb-6">
+              热门产品
+            </h2>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+
+          {products.length === 0 && query && (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">
+                没有找到相关产品，请尝试其他关键词
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface ProductCardProps {
+  product: Product & { price_records: PriceRecord[] };
+}
+
+function ProductCard({ product }: ProductCardProps) {
+  const prices = product.price_records.sort((a, b) => a.price - b.price);
+  const bestPrice = prices[0];
+  const priceRange = prices.length > 1 ? `$${bestPrice.price} - $${prices[prices.length - 1].price}` : `$${bestPrice?.price || 'N/A'}`;
+
+  return (
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+      <div className="aspect-w-16 aspect-h-9">
+        <img
+          src={product.image_url || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300'}
+          alt={product.name}
+          className="w-full h-48 object-cover"
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-lg mb-2 line-clamp-2">{product.name}</h3>
+        <p className="text-gray-600 text-sm mb-3 line-clamp-2">{product.description}</p>
+        
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-2xl font-bold text-green-600">{priceRange}</span>
+            <span className="text-sm text-gray-500">{prices.length} 个平台</span>
+          </div>
+          
+          {prices.length > 0 && (
+            <div className="space-y-1">
+              {prices.slice(0, 3).map((price, index) => (
+                <div key={price.id} className="flex justify-between text-sm">
+                  <span className="capitalize font-medium">{price.platform}</span>
+                  <div className="flex items-center gap-2">
+                    <span className={index === 0 ? 'text-green-600 font-semibold' : 'text-gray-600'}>
+                      ${price.price}
+                    </span>
+                    {index === 0 && <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded">最低价</span>}
+                  </div>
+                </div>
+              ))}
+              {prices.length > 3 && (
+                <div className="text-xs text-gray-500 text-center">
+                  +{prices.length - 3} 更多平台
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
