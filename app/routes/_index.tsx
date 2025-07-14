@@ -88,45 +88,49 @@ export default function Index() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-16">
         {/* 页头 */}
-        <header className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+        <header className="text-center mb-16 pt-8">
+          <h1 className="text-5xl font-bold text-gray-900 mb-6">
             🛒 智能比价神器
           </h1>
-          <p className="text-xl text-gray-600">
+          <p className="text-xl text-gray-600 mb-8">
             一键搜索，多平台比价，帮您找到最优惠的价格
           </p>
         </header>
 
         {/* 搜索区域 */}
-        <div className="max-w-4xl mx-auto mb-12">
-          <Form method="get" className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <input
-                name="q"
-                type="text"
-                placeholder="搜索产品..."
-                defaultValue={query || ""}
-                className="w-full px-4 py-3 text-lg border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+        <div className="max-w-4xl mx-auto mb-16 px-4">
+          <Form method="get" className="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                <input
+                  name="q"
+                  type="text"
+                  placeholder="输入产品名称，如：iPhone、MacBook、AirPods..."
+                  defaultValue={query || ""}
+                  className="w-full px-6 py-4 text-lg border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                />
+              </div>
+              <div className="flex gap-3">
+                <button
+                  type="submit"
+                  disabled={isSearching}
+                  className="px-8 py-4 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSearching ? "搜索中..." : "🔍 搜索"}
+                </button>
+                <button
+                  type="submit"
+                  name="scrape"
+                  value="true"
+                  disabled={isSearching}
+                  className="px-8 py-4 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isSearching ? "抓取中..." : "⚡ 立即抓取"}
+                </button>
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={isSearching}
-              className="px-8 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSearching ? "搜索中..." : "搜索"}
-            </button>
-            <button
-              type="submit"
-              name="scrape"
-              value="true"
-              disabled={isSearching}
-              className="px-8 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSearching ? "抓取中..." : "立即抓取"}
-            </button>
           </Form>
 
           {/* 使用提示 */}
