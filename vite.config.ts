@@ -11,7 +11,6 @@ declare module "@remix-run/node" {
 export default defineConfig({
   plugins: [
     remix({
-      ssr: true, // 保持SSR模式
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,
@@ -22,10 +21,4 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
-  ssr: {
-    noExternal: ["@supabase/supabase-js"],
-  },
-  build: {
-    target: "esnext",
-  },
 });
