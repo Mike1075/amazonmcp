@@ -14,11 +14,33 @@ export const meta: MetaFunction = () => {
 export async function loader({ request }: LoaderFunctionArgs) {
   const url = new URL(request.url);
   const query = url.searchParams.get("q");
+  const scrape = url.searchParams.get("scrape"); // 新参数：是否需要抓取
 
   let products: (Product & { price_records: PriceRecord[] })[] = [];
+  let scrapeResults = null;
 
   if (query) {
-    // 搜索产品和价格记录
+    // 如果需要抓取新数据
+    if (scrape === "true") {
+      try {
+        // 调用价格抓取API
+        const formData = new FormData();
+        formData.append('query', query);
+        const scrapeResponse = await fetch(`${url.origin}/api/scrape`, {
+          method: 'POST',
+          body: formData,
+        });
+        
+        if (scrapeResponse.ok) {
+          scrapeResults = await scrapeResponse.json();
+          console.log('价格抓取成功:', scrapeResults);
+        }
+      } catch (error) {
+        console.error('调用抓取API失败:', error);
+      }
+    }
+
+    // 搜索产品和价格记录（包括新抓取的数据）
     const { data, error } = await supabase
       .from('products')
       .select(`
@@ -47,11 +69,16 @@ export async function loader({ request }: LoaderFunctionArgs) {
     }
   }
 
-  return json({ products, query });
+  return json({ 
+    products, 
+    query, 
+    scrapeResults,
+    total: products.length 
+  });
 }
 
 export default function Index() {
-  const { products, query } = useLoaderData<typeof loader>();
+  const { products, query, scrapeResults, total } = useLoaderData<typeof loader>();
   const navigation = useNavigation();
   const isSearching = navigation.state === "submitting";
 
@@ -91,7 +118,34 @@ export default function Index() {
             >
               {isSearching ? "搜索中..." : "搜索"}
             </button>
+            <button
+              type="submit"
+              name="scrape"
+              value="true"
+              disabled={isSearching}
+              className="px-8 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSearching ? "抓取中..." : "立即抓取"}
+            </button>
           </Form>
+
+          {/* 使用提示 */}
+          {!query && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 className="text-sm font-medium text-blue-800 mb-1">使用指南</h3>
+                  <p className="text-sm text-blue-700">
+                    <strong>搜索</strong>：查看数据库中已有的价格数据<br/>
+                    <strong>立即抓取</strong>：从各大电商平台获取最新实时价格（推荐）
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* 平台筛选 */}
           <div className="flex flex-wrap gap-2">
@@ -118,6 +172,36 @@ export default function Index() {
             ))}
           </div>
         </div>
+
+        {/* 抓取结果状态 */}
+        {scrapeResults && (
+          <div className="max-w-6xl mx-auto mb-6">
+            <div className={`p-4 rounded-lg ${scrapeResults.success ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+              <div className="flex items-center">
+                {scrapeResults.success ? (
+                  <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-red-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                )}
+                <span className={`font-medium ${scrapeResults.success ? 'text-green-800' : 'text-red-800'}`}>
+                  {scrapeResults.success ? '✅ 价格抓取成功！' : '❌ 价格抓取失败'}
+                </span>
+              </div>
+              <p className={`mt-1 text-sm ${scrapeResults.success ? 'text-green-700' : 'text-red-700'}`}>
+                {scrapeResults.message || scrapeResults.error}
+              </p>
+              {scrapeResults.success && scrapeResults.total_saved && (
+                <p className="mt-1 text-sm text-green-600">
+                  成功保存 {scrapeResults.total_saved} 个产品的价格数据
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 搜索结果 */}
         <div className="max-w-6xl mx-auto">
