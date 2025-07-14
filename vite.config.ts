@@ -11,7 +11,6 @@ declare module "@remix-run/node" {
 export default defineConfig({
   plugins: [
     remix({
-      serverBuildFile: "index.js",
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,
