@@ -11,6 +11,7 @@ declare module "@remix-run/node" {
 export default defineConfig({
   plugins: [
     remix({
+      serverBuildFile: "index.js",
       future: {
         v3_fetcherPersist: true,
         v3_relativeSplatPath: true,
@@ -21,4 +22,7 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  ssr: {
+    noExternal: ["@supabase/supabase-js"],
+  },
 });
